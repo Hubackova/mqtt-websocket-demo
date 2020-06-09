@@ -2,20 +2,51 @@
     <head>
         <title>MQTT consumer</title>
         <script src="https://unpkg.com/mqtt@4.1.0/dist/mqtt.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/epoch/0.8.4/js/epoch.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/epoch/0.8.4/css/epoch.min.css"/>
+        <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script> 
+        <!-- it would be better to use another library -->
     </head>
-    <body>
-        <div id="chart"></div>
+    <body>GRAF:
+        <div id="chartContainer" style="height: 370px; width:100%;"></div>
         <script type="text/javascript">
-            
             const client = mqtt.connect('ws://localhost:9001')
             client.subscribe("chart")
-          
+            
+            const dps = []; // dataPoints
             client.on("message", (topic, payload) => {
-              console.log([topic, payload].join(": "))
+              const payloadData = JSON.parse(payload)
+              dps.push({
+                        x: new Date(),
+                        y: payloadData.y
+                    });
             })
+      
+           
+            const chart = new CanvasJS.Chart("chartContainer", {
+                title: {
+                    text: "Dynamic Data"
+                },
+                axisY: {
+                    includeZero: false
+                },      
+                data: [{
+                    type: "spline",
+		            markerSize: 0,
+                    dataPoints: dps
+                }]
+            });
+        
+            const updateInterval = 40;
+            const dataLength = 20; // number of dataPoints visible at any point
+
+            const updateChart = function () {
+                if (dps.length > dataLength) {
+                    dps.shift();
+                }
+                chart.render();
+            };
+
+            updateChart();
+            setInterval(function(){updateChart()}, updateInterval);
         </script>
     </body>
 </html>

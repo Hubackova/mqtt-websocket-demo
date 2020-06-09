@@ -9,9 +9,9 @@ client.on('connect', err => {
     console.log('Producer subscribed to "chart" topic.')
 
     if (!err) {
-      periodic(1000)
+      periodic(40) // frequency time (ms)
         .on('tick', _ => {
-          client.publish('chart', Math.random().toString())
+          client.publish('chart', JSON.stringify({"time": Date.now(), "y": Math.random() * 100}))
         })
     } else {
       console.log(err)
